@@ -3,7 +3,7 @@ import { GET_TODOS } from "./queries/query";
 
 export const resolvers = {
   Launch: {
-    getTodos: (launch, _args, { cache }) => {
+    getTodos_: (launch, _args, { cache }) => {
       const { todos } = cache.readQuery({ query: GET_TODOS });
       return todos;
     },
@@ -11,18 +11,10 @@ export const resolvers = {
   Mutation: {
     getTodos: (launch, _args, { cache }) => {
       const { todos } = cache.readQuery({ query: GET_TODOS });
+      cache.refetchQueries(cache, {query: GET_TODOS }) ;
       return todos;
     },
     removeTask:(_, { id }, { cache }) => {
-      // const query = gql`
-      //     query getTodos {
-      //         todos @client {
-      //             id
-      //             name
-      //             completed
-      //         }
-      //     }
-      // `;
       const data = cache.readQuery({ query:GET_TODOS });
       cache.writeQuery({
         query: GET_TODOS,
@@ -55,9 +47,11 @@ export const resolvers = {
       const previous = cache.readQuery({ query:GET_TODOS});
       const newTodo = { id: RandomID(10), name, completed: false };
       const data = {
-        todos: [...previous?.todos, newTodo],
+        todos:previous ? [...previous?.todos, newTodo]:[ newTodo],
       };
       cache.writeQuery({query: GET_TODOS, data });
+      //this nedded update cache ,when you use dont have network
+      cache.refetchQueries(cache, { data: { data } }) ;
       return newTodo;
     },
   }

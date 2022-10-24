@@ -1,15 +1,16 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Keyboard,
-  StyleSheet, TouchableOpacity,
+  StyleSheet,
   View,
 } from "react-native";
 import {
   useQuery,
-  useMutation,
+  useMutation, InMemoryCache,
 } from "@apollo/client";
+import {TouchableOpacity} from 'react-native-gesture-handler'
 
 import { ADD_TODO, GET_TODOS, REMOVE_TASK,UPDATE_TODO } from "../apollo/queries/query";
 import TaskInputField from "../components/TaskInputField";
@@ -19,29 +20,34 @@ import { Colors } from "../utils/constansts/Colors";
 
 const TodoScreen= () => {
 
-  const [selectedTask, setSelectedTask] = useState({id:"0",completed:false,name:""});
+  const [selectedTask, setSelectedTask] = useState({ id: "0", completed: false, name: "" });
   const [type, setType] = useState("ADD"); //title of button add , update
+  const [tasks, setTasks] = useState();
   //useMutation for add,update & remove task
   const [addTodo] = useMutation(ADD_TODO);
   const [removeTask] = useMutation(REMOVE_TASK);
   const [updateTodo] = useMutation(UPDATE_TODO);
 
-  const { loading, error,  data  } = useQuery(GET_TODOS);
+  //get todos from cache
+  const { loading, data:  datas = {}  } = useQuery(
+    GET_TODOS
+  )
 
   //add task if new one & update if user click on task row
   const addTask = () => {
 
-    if (selectedTask == null || selectedTask==={}) return;
-    if(type==="UPDATE") {
+    if (selectedTask == null || selectedTask === {}) return;
+    if (type === "UPDATE") {
       setType("ADD")
-      setSelectedTask({id:"0",completed:false,name:""})
+      setSelectedTask({ id: "0", completed: false, name: "" })
       updateTodo({
         variables: {
-          id: selectedTask?.id,name: selectedTask.name
+          id: selectedTask?.id, name: selectedTask.name
         }
-      }).then(r =>{console.log("r",r)})
-    }
-    else {
+      }).then(r => {
+        console.log("r", r)
+      })
+    } else {
       addTodo({
         variables: {
           name: selectedTask.name
@@ -49,7 +55,8 @@ const TodoScreen= () => {
       }).then(r => {
         console.log("r", r)
       })
-      setSelectedTask({...selectedTask,name:""})
+      //clear selected task ,so that become ready for next turn
+      setSelectedTask({ ...selectedTask, name: "" })
     }
     Keyboard.dismiss();
   }
@@ -59,7 +66,9 @@ const TodoScreen= () => {
       variables: {
         id: selectedItem.id
       }
-    }).then(r =>{console.log("r",r)})
+    }).then(r => {
+      console.log("r", r)
+    })
   }
 
   const updateTaskName = (selectedItem) => {
@@ -67,32 +76,32 @@ const TodoScreen= () => {
     setType("UPDATE")
   }
 
-  const RenderItem = ({item, index}) => {
-   return(
-     <TaskItem task={item}
-              updateTask={()=>updateTaskName(item)}
-              deleteTask={()=>deleteTask(item)}/>
-   )}
+  const RenderItem =  ({ item, index }) => {
+    return (
+      <TaskItem task={item}
+                updateTask={() => updateTaskName(item)}
+                deleteTask={() => deleteTask(item)} />
+    )
+  }
 
   return (
     <View style={styles.container}>
-      {loading  ?
-        <Loading/>
+      {loading ?
+        <Loading />
         :
         <FlatList
-          data={data?.todos.filter(Boolean)}
+          data={datas?.todos.filter(Boolean)}
           renderItem={RenderItem}
           keyExtractor={(item) => item.id}
-       />}
-      <TouchableOpacity onPress={()=>setType("ADD")}/>
+        />}
       <TaskInputField task={selectedTask.name}
                       type={type}
-                      onChange={text => setSelectedTask({...selectedTask,name: text })}
-                      addTask={()=>addTask()}/>
+                      onChange={text => setSelectedTask({ ...selectedTask, name: text })}
+                      addTask={() => addTask()} />
     </View>
   );
-};
 
+}
 
 const styles = StyleSheet.create({
     container: {

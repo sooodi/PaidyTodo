@@ -5,8 +5,8 @@ import React, { useEffect, useState } from "react";
 
 /** libraries **/
 import {
-   StyleSheet,
-   StatusBar
+  StyleSheet,
+  StatusBar, ActivityIndicator,
 } from "react-native";
 import {NavigationContainer} from '@react-navigation/native';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -26,49 +26,67 @@ import TodoScreen from "./src/screens/TodoScreen";
 import { GET_TODOS } from "./src/apollo/queries/query";
 import { resolvers } from "./src/apollo/Resolver";
 import Starter from "./src/screens/Starter";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { persistCache } from "apollo3-cache-persist";
 
-const cache = new InMemoryCache();
+// const cache = new InMemoryCache();
 const Stack = createNativeStackNavigator();
 
-/*uri is temporary,we read data from cache  & we can put uri inside .env for security reasons*/
-const client = new ApolloClient({
-   uri: 'https://api.graphql.guide/graphql',
-  cache,
-  resolvers,
-  defaultOptions: { watchQuery: { fetchPolicy: 'cache-and-network' } },
-})
 
-/* for test */
-const myNewTodo ={
-  id: RandomID(10), /* use random-id to generate random & uniq id ,we can use uuid or other custom approach*/
-  name: "test",
-  completed: false,
-}
-//const data = client.readQuery({ query:GET_TODOS });
-cache.writeQuery({
-  query:GET_TODOS,
-  data: {
-    todos: [ myNewTodo]
-  }
-});
+/*uri is temporary,we read data from cache  & we can put uri inside .env for security reasons*/
+// const client = new ApolloClient({
+//    uri: 'https://api.graphql.guide/graphql',
+//   cache,
+//   resolvers,
+//   defaultOptions: { watchQuery: { fetchPolicy: 'cache-and-network' } },
+// })
+//
+// /* for test */
+// const myNewTodo ={
+//   id: RandomID(10), /* use random-id to generate random & uniq id ,we can use uuid or other custom approach*/
+//   name: "test",
+//   completed: false,
+// }
+// const data = client.readQuery({ query:GET_TODOS });
+// cache.writeQuery({
+//   query:GET_TODOS,
+//   data: {
+//     todos:data ? [...data, myNewTodo] : [ myNewTodo]
+//   }
+// });
 /* for test */
 
 const App = () => {
 
   const [loadingCache, setLoadingCache] = useState(true)
-  const data = cache.readQuery({ query :GET_TODOS});
-
-  useEffect(() => {
-    // persistCache({
-    //   cache,
-    //   storage: AsyncStorage,
-    // }).then(() => setLoadingCache(false))
-  }, [])
+  // const data = cache.readQuery({ query :GET_TODOS});
+  // console.log("data",data)
+  // useEffect(() => {
+  //   persistCache({
+  //     cache,
+  //     storage: AsyncStorage,
+  //   }).then(() => setLoadingCache(false))
+  // }, [])
 
   // if (loadingCache) {
   //   return <ActivityIndicator />
   // }
+  const cache = new InMemoryCache();
 
+  persistCache({
+    cache,
+    storage: AsyncStorage,
+  }).then(r  =>{});
+
+  /*uri is temporary,we read data from cache  & we can put uri inside .env for security reasons*/
+  const client = new ApolloClient({
+    uri: 'https://api.graphql.guide/graphql',
+    cache,
+    resolvers,
+    defaultOptions: { watchQuery: { fetchPolicy: 'cache-only' } },
+  })
+  const data = cache.readQuery({ query :GET_TODOS,});
+  console.log("data",data)
   return (
     <ApolloProvider client={client}>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>

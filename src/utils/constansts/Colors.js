@@ -1,5 +1,5 @@
 export const Colors = {
-
+  // list of all rgb all in one place
   BACKGROUND: '#000',
   Back_COLOR: '#efefef',
   BLACK_OFF: '#444444',
